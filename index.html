@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste des Contacts Ameli</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>Contacts des Professionnels de Santé</h1>
+    </header>
+
+    <section class="upload">
+        <input type="file" id="fileInput" accept=".xlsx" />
+    </section>
+
+    <section class="contact-list">
+        <table id="contactsTable">
+            <thead>
+                <tr>
+                    <th>Nom</th>
+                    <th>Profession</th>
+                    <th>Téléphone</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Les données seront insérées ici -->
+            </tbody>
+        </table>
+    </section>
+
+    <footer>
+        <p>Contactez-nous pour plus d'informations.</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
