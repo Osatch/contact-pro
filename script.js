@@ -60,3 +60,19 @@ function copyToClipboard(phoneNumber) {
         console.error('Erreur lors de la copie :', err);
     });
 }
+
+// Fonction pour ouvrir Aircall avec le numéro pré-rempli
+/*function openAircallWithPhoneNumber(phoneNumber) {
+    const aircallUrl = `https://app.aircall.io/call/${phoneNumber}`;
+
+    // Ouvrir Aircall dans un nouvel onglet
+    window.open(aircallUrl, '_blank');
+
+    // Optionnel : Vous pouvez également copier le numéro dans le presse-papiers si nécessaire
+    navigator.clipboard.writeText(phoneNumber).then(() => {
+        console.log(`Le numéro ${phoneNumber} a été copié dans le presse-papiers et envoyé à Aircall.`);
+    }).catch(err => {
+        console.error('Erreur lors de la copie dans le presse-papiers :', err);
+    });
+}*/
+

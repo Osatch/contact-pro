@@ -3,9 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste des Contacts Ameli</title>
+    <title>Liste des Contacts Ameli</title>   
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <style>
+        .status-container {
+            display: flex;
+            align-items: center;
+        }
+        .status-box {
+            padding: 5px 10px;
+            margin-left: 10px;
+            border-radius: 25px;
+            color: white;
+            display: none; /* Masquer par défaut */
+        }
+        .status-box.vente { background-color: green; }
+        .status-box.rappel { background-color: blue; }
+        .status-box.ne_repond_pas { background-color: orange; }
+        .status-box.Ne_Plus_Rap { background-color: red; }
+        .status-box.mauvais_numero { background-color: gray; }
+
+        select {
+            margin-right: 10px;
+            width: 120px;
+        }
+
+        select.small {
+            width: 40px; /* Pour la flèche réduite */
+            padding: 0;
+        }
+
+        .date-time {
+            font-size: 12px;
+            color: gray;
+        }
+    </style>
 </head>
 <body>
 
@@ -21,9 +54,12 @@
         <table id="contactsTable">
             <thead>
                 <tr>
+                    <th>#</th>
                     <th>Nom</th>
                     <th>Profession</th>
                     <th>Téléphone</th>
+                    <th>Statut</th>
+                    <th>Date/Heure du clic</th>
                 </tr>
             </thead>
             <tbody>
@@ -36,6 +72,122 @@
         <p>Contactez-nous pour plus d'informations.</p>
     </footer>
 
-    <script src="script.js"></script>
+    <script>
+        document.getElementById("fileInput").addEventListener("change", handleFile, false);
+
+        function handleFile(event) {
+            const file = event.target.files[0];
+            
+            if (file && file.name.endsWith(".xlsx")) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = e.target.result;
+                    const workbook = XLSX.read(data, { type: "binary" });
+
+                    // Nous allons récupérer la première feuille du fichier Excel
+                    const sheetName = workbook.SheetNames[0];
+                    const sheet = workbook.Sheets[sheetName];
+
+                    // Convertir la feuille en JSON (tableau d'objets)
+                    const json = XLSX.utils.sheet_to_json(sheet);
+
+                    displayContacts(json);
+                };
+                reader.readAsBinaryString(file);
+            } else {
+                alert("Veuillez télécharger un fichier Excel (.xlsx) valide.");
+            }
+        }
+
+        function displayContacts(data) {
+            const tableBody = document.querySelector("#contactsTable tbody");
+            tableBody.innerHTML = ""; // Réinitialiser la table avant de remplir
+
+            let counter = 1; // Compteur pour numéroter les contacts
+
+            data.forEach(contact => {
+                const row = document.createElement("tr");
+
+                // Ajouter le numéro avant le nom
+                const numberCell = document.createElement("td");
+                numberCell.textContent = counter++;
+                row.appendChild(numberCell);
+
+                // Nom
+                const nameCell = document.createElement("td");
+                nameCell.textContent = contact["Nom"];
+                row.appendChild(nameCell);
+
+                // Profession
+                const professionCell = document.createElement("td");
+                professionCell.textContent = contact["Profession"];
+                row.appendChild(professionCell);
+
+                // Téléphone avec bouton pour ouvrir Aircall
+                const phoneCell = document.createElement("td");
+                const phoneButton = document.createElement("button");
+                phoneButton.textContent = contact["Téléphone"];
+                phoneButton.onclick = function() {
+                    const currentTime = new Date().toLocaleString();
+                    openAircallWithPhoneNumber(contact["Téléphone"], currentTime, row);
+                };
+                phoneCell.appendChild(phoneButton);
+                row.appendChild(phoneCell);
+
+                // Liste déroulante et statut
+                const statusCell = document.createElement("td");
+                const statusSelect = document.createElement("select");
+                statusSelect.innerHTML = `
+                    <option value="">Sélectionner un statut</option>
+                    <option value="vente">Vente</option>
+                    <option value="rappel">Rappel</option>
+                    <option value="ne_repond_pas">Ne répond pas</option>
+                    <option value="Ne_Plus_Rap">Ne plus rappeler</option>
+                    <option value="mauvais_numero">Mauvais numéro</option>
+                `;
+                const statusBox = document.createElement("div");
+                statusBox.classList.add("status-box");
+                statusSelect.addEventListener("change", function() {
+                    updateStatusBox(statusSelect, statusBox);
+                    statusSelect.classList.add("small");  // Réduire la liste déroulante après sélection
+                });
+                statusCell.appendChild(statusSelect);
+                statusCell.appendChild(statusBox);
+                row.appendChild(statusCell);
+
+                // Date et heure du clic
+                const dateCell = document.createElement("td");
+                dateCell.classList.add("date-time");
+                row.appendChild(dateCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateStatusBox(selectElement, statusBox) {
+            const selectedValue = selectElement.value;
+            statusBox.textContent = selectedValue ? selectedValue : '';
+            statusBox.className = 'status-box ' + selectedValue;
+            statusBox.style.display = selectedValue ? 'inline-block' : 'none'; // Afficher le rectangle coloré
+        }
+
+        function openAircallWithPhoneNumber(phoneNumber, currentTime, row) {
+            const aircallUrl = `https://app.aircall.io/call/${phoneNumber}`;
+
+            // Ouvrir Aircall dans un nouvel onglet
+            window.open(aircallUrl, '_blank');
+
+            // Copier le numéro dans le presse-papiers
+            navigator.clipboard.writeText(phoneNumber).then(() => {
+                console.log(`Le numéro ${phoneNumber} a été copié dans le presse-papiers et envoyé à Aircall.`);
+            }).catch(err => {
+                console.error('Erreur lors de la copie dans le presse-papiers :', err);
+            });
+
+            // Afficher la date et l'heure du clic uniquement sur la ligne du numéro cliqué
+            const dateCell = row.querySelector(".date-time");
+            dateCell.textContent = currentTime;
+        }
+    </script>
 </body>
 </html>
